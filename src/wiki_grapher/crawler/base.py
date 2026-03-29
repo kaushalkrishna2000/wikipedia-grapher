@@ -119,7 +119,9 @@ class WikiGraphBase:
             return []
 
         # Filter for main namespace links (ns=0) and extract titles
-        return [link['*'] for link in links if link.get('ns') == 0]
+        discovered_titles = [link['*'] for link in links if link.get('ns') == 0]
+        logger.debug(f"Discovered {len(discovered_titles)} links in 'See also' section of '{word}'")
+        return discovered_titles
 
     def wiki_rel(self, word, random_seed=0, limit=DEFAULT_LIMIT):
         """Crawl one hop from *word* and return the next page title.
@@ -167,12 +169,15 @@ class WikiGraphBase:
                     word = random.choice(unvisited)
                     continue
                 remaining_patience -= 1
+                logger.debug(f"Patience decreased: {remaining_patience} remaining")
                 if remaining_patience == 0:
                     logger.warning("Patience exhausted — stopping early.")
                     break
                 continue
 
             next_word = self.wiki_rel(word, random_seed=random_seed, limit=limit)
+            if remaining_patience < patience:
+                logger.debug("Patience reset")
             remaining_patience = patience  # reset on successful crawl
             word = next_word
             time.sleep(DEFAULT_RATE_LIMIT_DELAY)

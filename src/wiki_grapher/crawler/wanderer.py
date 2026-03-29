@@ -4,10 +4,14 @@ At each hop the Wanderer draws a random subset of related pages rather than
 following a fixed chain, producing a broader, more exploratory graph.
 """
 
+import logging
 import random
 
 from wiki_grapher.crawler.base import WikiGraphBase
 from wiki_grapher.constants.constants import DEFAULT_LIMIT_V2
+
+
+logger = logging.getLogger(__name__)
 
 
 class Wanderer(WikiGraphBase):
@@ -55,6 +59,7 @@ class Wanderer(WikiGraphBase):
         self.dict_set[word] = random_sub_list
         for val in random_sub_list:
             self.word_set.add(val)
+        logger.debug(f"Added {len(random_sub_list)} nodes to database for '{word}': {random_sub_list}")
 
         if random_seed == 0:
             return random.choice(random_sub_list)

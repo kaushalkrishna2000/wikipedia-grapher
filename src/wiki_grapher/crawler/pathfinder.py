@@ -4,10 +4,14 @@ At each hop the Pathfinder selects a single page from the related-pages list
 (randomly or deterministically) and follows it, building a chain-like graph.
 """
 
+import logging
 import random
 
 from wiki_grapher.crawler.base import WikiGraphBase
 from wiki_grapher.constants.constants import DEFAULT_LIMIT
+
+
+logger = logging.getLogger(__name__)
 
 
 class Pathfinder(WikiGraphBase):
@@ -46,6 +50,7 @@ class Pathfinder(WikiGraphBase):
         for title in word_list:
             self.word_set.add(title)
         self.dict_set[word] = word_list
+        logger.debug(f"Added {len(word_list)} nodes to database for '{word}': {word_list}")
 
         if not word_list:
             return word
