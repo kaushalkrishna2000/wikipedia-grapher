@@ -51,6 +51,7 @@ class Wanderer(WikiGraphBase):
         all_pages = self._fetch_related(word)
 
         if not all_pages:
+            self.dict_set[word] = []
             return word
 
         sample_size = min(limit, len(all_pages))

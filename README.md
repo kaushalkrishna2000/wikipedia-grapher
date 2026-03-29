@@ -69,7 +69,7 @@ After crawling, `Grapher` builds a NetworkX graph from the collected data and re
   - Red — topics directly crawled as key nodes
   - Blue — topics discovered as neighbours (not directly crawled)
 - **Node size** — proportional to the node's degree (number of connections)
-- **Output** — `exploration_map.pdf` by default (static), or a live animated window
+- **Output** — `exploration_map.pdf` by default (static), `exploration_map.html` (interactive), or a live animated window
 
 ---
 
@@ -157,6 +157,8 @@ g = Grapher(
 
 g.develop_graph()       # saves exploration_map.pdf
 # g.live_graph(delay=2) # animated live graph, delay in seconds between frames
+# g.animated_graph(delay=2) # structured animation (Empty -> Seed -> Expansion)
+# g.develop_html_graph() # saves interactive exploration_map.html
 ```
 
 ---

@@ -47,9 +47,9 @@ class Pathfinder(WikiGraphBase):
         all_pages = self._fetch_related(word)
         word_list = all_pages[:limit]
 
+        self.dict_set[word] = word_list
         for title in word_list:
             self.word_set.add(title)
-        self.dict_set[word] = word_list
         logger.debug(f"Added {len(word_list)} nodes to database for '{word}': {word_list}")
 
         if not word_list:

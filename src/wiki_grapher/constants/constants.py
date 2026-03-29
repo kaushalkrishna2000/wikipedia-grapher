@@ -31,8 +31,10 @@ DEFAULT_LIVE_GRAPH_DELAY = 5  # seconds
 # Node colours
 COLOR_SEED_NODE = "green"
 COLOR_KEY_NODE = "red"
+COLOR_ACTIVE_NODE = "yellow"
 COLOR_DEFAULT_NODE = "blue"
 COLOR_WHITE_NODE = "white"
 
 # Output
-OUTPUT_FIGURE_PATH = "../exploration_map.pdf"
+OUTPUT_FIGURE_PATH = "exploration_map.pdf"
+OUTPUT_HTML_PATH = "exploration_map.html"

@@ -14,9 +14,10 @@ Example::
 The output graph is saved to ``exploration_map.pdf`` in the working directory.
 Uncomment ``g.live_graph()`` to watch the graph grow in real time.
 """
-
+import logging
 import sys
 import os
+
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
@@ -26,24 +27,26 @@ from wiki_grapher.grapher.grapher import Grapher
 from wiki_grapher.logger import setup_logging
 
 if __name__ == '__main__':
-    setup_logging()
+    setup_logging(logging.DEBUG)
 
     # Uncomment the crawler you want to use:
     # - Pathfinder: follows a sequential / random-choice chain of related pages
     # - Wanderer: randomly samples a subset of related pages at each hop
-    wiki_obj = Pathfinder()
-    # wiki_obj = Wanderer()
+    # wiki_obj = Pathfinder()
+    wiki_obj = Wanderer()
 
-    wiki_obj.set_word("Shah_Rukh_Khan")
-    wiki_obj.set_iter_budget(iter_budget=240)
-    wiki_obj.wiki_iter(random_seed=0, limit=3, patience=5)
+    wiki_obj.set_word("Apple")
+    wiki_obj.set_iter_budget(iter_budget=10)
+    wiki_obj.wiki_iter(random_seed=0, limit=5, patience=5)
 
     g = Grapher(dict_set=wiki_obj.dict_set,
                 word=wiki_obj.word,
                 monochrome=False,
                 labels=False,
-                size=40)
+                size=8)
 
     # Uncomment if you want a live graph; delay is in seconds.
     # g.live_graph(delay=2)
+    # g.animated_graph(delay=2)
+    # g.develop_html_graph()
     g.develop_graph()
