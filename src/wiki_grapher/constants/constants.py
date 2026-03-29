@@ -9,8 +9,9 @@ Groups:
 """
 
 # Wikipedia API
-WIKIPEDIA_BASE_URL = "https://en.wikipedia.org/api/rest_v1/page/related"
+WIKIPEDIA_BASE_URL = "https://en.wikipedia.org/w/api.php"
 API_TIMEOUT = 10  # seconds
+API_USER_AGENT = "wikipedia-grapher/1.0 (https://github.com/kaushalkrishna2000/wikipedia-grapher)"
 
 # Crawler defaults
 DEFAULT_WORD = "Apple"
@@ -30,8 +31,10 @@ DEFAULT_LIVE_GRAPH_DELAY = 5  # seconds
 # Node colours
 COLOR_SEED_NODE = "green"
 COLOR_KEY_NODE = "red"
+COLOR_ACTIVE_NODE = "yellow"
 COLOR_DEFAULT_NODE = "blue"
 COLOR_WHITE_NODE = "white"
 
 # Output
 OUTPUT_FIGURE_PATH = "exploration_map.pdf"
+OUTPUT_HTML_PATH = "exploration_map.html"

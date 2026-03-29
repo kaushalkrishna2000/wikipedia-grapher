@@ -8,3 +8,6 @@ networkx
 
 # Graph visualisation and plotting
 matplotlib
+
+# Interactive HTML graph visualisation
+pyvis

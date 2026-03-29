@@ -4,8 +4,12 @@ Builds a NetworkX graph from the crawler's adjacency map and renders it
 either as a static PDF figure or as an animated live plot.
 """
 
+import logging
+
 import matplotlib.pyplot as plt
 import networkx as nx
+
+logger = logging.getLogger(__name__)
 
 from wiki_grapher.constants.constants import (
     DEFAULT_GRAPH_SIZE,
@@ -15,9 +19,11 @@ from wiki_grapher.constants.constants import (
     DEFAULT_LIVE_GRAPH_DELAY,
     COLOR_SEED_NODE,
     COLOR_KEY_NODE,
+    COLOR_ACTIVE_NODE,
     COLOR_DEFAULT_NODE,
     COLOR_WHITE_NODE,
     OUTPUT_FIGURE_PATH,
+    OUTPUT_HTML_PATH,
 )
 
 
@@ -59,16 +65,20 @@ class Grapher:
         self.size = size
         self.gtype = gtype
 
-    def _build_graph(self):
-        """Build the NetworkX graph and compute per-node colours and degrees.
+    def _build_graph(self, active_node=None):
+        """Build the NetworkX graph and compute per-node colors and degrees.
 
-        The seed node (``self.word``) is coloured green, intermediate key
-        nodes red, and leaf nodes blue (all white in monochrome mode).
+        The seed node (``self.word``) is colored green, the active node is
+        yellow, intermediate key nodes are red, and leaf nodes are blue
+        (all white in monochrome mode).
+
+        Args:
+            active_node (str | None): The node currently being expanded.
 
         Returns:
             tuple:
                 - **g** (``nx.Graph`` | ``nx.DiGraph``): The constructed graph.
-                - **color_seq** (list[str]): Colour string for each node in
+                - **color_seq** (list[str]): Color string for each node in
                   ``g.nodes()`` order.
                 - **d** (dict): Mapping of ``{node: degree}``.
         """
@@ -84,7 +94,13 @@ class Grapher:
                 g.add_edge(key, value)
 
         colored_dict = nx.get_node_attributes(g, 'color')
-        color_seq = [colored_dict.get(node, default_color) for node in g.nodes()]
+        color_seq = []
+        for node in g.nodes():
+            if node == active_node and not self.monochrome:
+                color_seq.append(COLOR_ACTIVE_NODE)
+            else:
+                color_seq.append(colored_dict.get(node, default_color))
+
         d = dict(g.degree)
         return g, color_seq, d
 
@@ -94,7 +110,7 @@ class Grapher:
         Draws the full graph using a spring layout, scales node sizes by
         degree, and writes the output to ``OUTPUT_FIGURE_PATH``.
         """
-        print(f"Graph mode : {self.gtype} | {self.size}")
+        logger.info(f"Graph mode : {self.gtype} | {self.size}")
 
         g, color_seq, d = self._build_graph()
 
@@ -118,15 +134,16 @@ class Grapher:
             delay (float): Seconds to pause between frame updates. Defaults
                 to ``DEFAULT_LIVE_GRAPH_DELAY``.
         """
-        print(f"Graph mode : {self.gtype} | {self.size}")
+        logger.info(f"Graph mode : {self.gtype} | {self.size}")
 
         with plt.ion():
             plt.figure(figsize=(self.size, self.size))
 
             for key in self.dict_set:
-                g, color_seq, d = self._build_graph()
+                g, color_seq, d = self._build_graph(active_node=key)
 
                 plt.clf()
+                plt.title(f"Expanding: {key}")
                 nx.draw(G=g,
                         with_labels=self.labels,
                         node_color=color_seq,
@@ -135,3 +152,95 @@ class Grapher:
                         pos=nx.spring_layout(g))
 
                 plt.pause(delay)
+
+    def animated_graph(self, delay=DEFAULT_LIVE_GRAPH_DELAY):
+        """Render the graph as a structured animation starting from an empty state.
+
+        Sequence:
+        1. Empty Window: Opens the plot window with a clear canvas.
+        2. Seed Phase: Draws only the seed node (green).
+        3. Expansion Phase: Gradually adds neighbors node-by-node from the crawl.
+
+        Args:
+            delay (float): Seconds to pause between frame updates. Defaults
+                to ``DEFAULT_LIVE_GRAPH_DELAY``.
+        """
+        logger.info(f"Animated Graph mode starting: {self.gtype} | {self.size}")
+
+        with plt.ion():
+            plt.figure(figsize=(self.size, self.size))
+
+            # --- Step 1: Initialise with an empty graph window ---
+            plt.clf()
+            plt.title("Initialising Crawler...")
+            plt.pause(delay)
+
+            # --- Step 2: Draw the seed node first ---
+            g_init = nx.Graph() if self.gtype == 'graph' else nx.DiGraph()
+            g_init.add_node(self.word)
+
+            plt.clf()
+            plt.title(f"Starting Seed: {self.word}")
+            nx.draw(G=g_init,
+                    with_labels=self.labels,
+                    node_color=[COLOR_SEED_NODE if not self.monochrome else COLOR_WHITE_NODE],
+                    node_size=[DEFAULT_LIVE_NODE_SIZE_MULTIPLIER],
+                    pos={self.word: (0, 0)})
+            plt.pause(delay)
+
+            # --- Step 3: Run the incremental update loop ---
+            processed_data = {}
+            for key, neighbors in self.dict_set.items():
+                processed_data[key] = neighbors
+
+                # Use a temporary override to reuse internal building logic
+                original_dict = self.dict_set
+                self.dict_set = processed_data
+                g, color_seq, d = self._build_graph(active_node=key)
+                self.dict_set = original_dict
+
+                plt.clf()
+                plt.title(f"Expanding: {key}")
+                nx.draw(G=g,
+                        with_labels=self.labels,
+                        node_color=color_seq,
+                        nodelist=d.keys(),
+                        node_size=[v * DEFAULT_LIVE_NODE_SIZE_MULTIPLIER for v in d.values()],
+                        pos=nx.spring_layout(g))
+
+                plt.pause(delay)
+
+    def develop_html_graph(self, filename=OUTPUT_HTML_PATH):
+        """Render the graph as an interactive, fluid HTML file using Pyvis.
+
+        Args:
+            filename (str): Path to save the HTML output. Defaults to
+                ``OUTPUT_HTML_PATH``.
+        """
+        logger.info(f"HTML Graph mode : {self.gtype} | {self.size}")
+
+        from pyvis.network import Network
+
+        # 1. Build the NetworkX graph from our existing internal logic
+        g, color_seq, d = self._build_graph()
+
+        # 2. Initialise Pyvis Network
+        net = Network(height="750px", width="100%", bgcolor="#222222", font_color="white", directed=(self.gtype == 'digraph'))
+
+        # 3. Load the NetworkX graph
+        net.from_nx(g)
+
+        # 4. Apply colors and sizes from our sequence (matching g.nodes() order)
+        for i, node in enumerate(g.nodes()):
+            # Use the color calculated in _build_graph
+            net.get_node(node)['color'] = color_seq[i]
+            # Scale node size for visibility in Pyvis
+            net.get_node(node)['size'] = d[node] * 10
+
+        # 5. Save and generate the HTML
+        logger.info(f"Saving HTML graph to: {filename}")
+        try:
+            with open(filename, 'w') as f:
+                f.write(net.generate_html())
+        except Exception as e:
+            logger.error(f"Failed to save HTML graph: {e}")

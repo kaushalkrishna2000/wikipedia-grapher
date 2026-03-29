@@ -1,6 +1,8 @@
 # Wiki-Grapher
 
-Wiki-Grapher builds a knowledge graph by crawling Wikipedia's "related pages" API, starting from a seed topic and hopping through related articles. The result is visualised as a graph saved to a PDF (or rendered live as an animation).
+Wiki-Grapher builds a knowledge graph by crawling Wikipedia's "See also" sections, starting from a seed topic and hopping through related articles. The result is visualised as a graph saved to a PDF (or rendered live as an animation).
+
+> **Note:** Due to the sunset of Wikipedia's `/page/related` REST API, the crawler now uses the Action API to fetch links specifically from the **"See also"** section of each page. This results in a more curated, though potentially smaller, graph.
 
 ---
 
@@ -15,7 +17,7 @@ flowchart TD
     C -- Yes --> K([Stop])
     C -- No --> D{Word already\nvisited?}
 
-    D -- No --> E[Fetch related pages\nfrom Wikipedia API]
+    D -- No --> E[Fetch 'See also' links\nfrom Wikipedia Action API]
     E --> F[Record topic to neighbours\nin dict_set and word_set]
     F --> G[Reset patience\nSelect next word]
     G --> H[Sleep rate-limit delay]
@@ -42,8 +44,8 @@ flowchart TD
 ### The Crawl Loop
 
 Starting from a seed topic, the crawler repeatedly:
-1. Fetches related pages for the current topic via the Wikipedia REST API
-2. Records the relationships in a dictionary (`topic → [related topics]`)
+1. Fetches links from the "See also" section of the current topic via the Wikipedia Action API
+2. Records the relationships in a dictionary (`topic → ["See also" links]`)
 3. Selects the next topic to visit based on the crawler's strategy
 4. Sleeps briefly between requests to respect rate limits
 
@@ -65,9 +67,10 @@ After crawling, `Grapher` builds a NetworkX graph from the collected data and re
 - **Node colours**
   - Green — seed topic (starting point)
   - Red — topics directly crawled as key nodes
+  - Yellow — the node currently being expanded (only in live/animated modes)
   - Blue — topics discovered as neighbours (not directly crawled)
 - **Node size** — proportional to the node's degree (number of connections)
-- **Output** — `exploration_map.pdf` by default (static), or a live animated window
+- **Output** — `exploration_map.pdf` by default (static), `exploration_map.html` (interactive fluid graph), or a live animated window
 
 ---
 
@@ -154,11 +157,16 @@ g = Grapher(
 )
 
 g.develop_graph()       # saves exploration_map.pdf
-# g.live_graph(delay=2) # animated live graph, delay in seconds between frames
+g.develop_html_graph() # saves interactive exploration_map.html
+# g.live_graph(delay=2) # animated live graph, updates same window
+# g.animated_graph(delay=2) # structured animation (Empty -> Seed -> Expansion)
 ```
 
 ---
 
 ## Output
 
-The graph is saved as `exploration_map.pdf` in the working directory. Node size reflects the number of connections — highly connected topics appear larger. Use `monochrome=True` for a cleaner black-and-white export.
+- **`exploration_map.pdf`**: A high-quality static vector graph.
+- **`exploration_map.html`**: A fluid, interactive graph rendered in your browser (physics-enabled, draggable nodes).
+- **Node Size**: Reflects the number of connections — highly connected topics appear larger.
+- **Monochrome Mode**: Use `monochrome=True` for a cleaner black-and-white export.

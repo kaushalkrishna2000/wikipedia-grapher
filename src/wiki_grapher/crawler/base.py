@@ -5,13 +5,17 @@ iteration loop used by all concrete crawler implementations.
 """
 
 import json
+import logging
 import random
 import time
 import requests
 
+logger = logging.getLogger(__name__)
+
 from wiki_grapher.constants.constants import (
     WIKIPEDIA_BASE_URL,
     API_TIMEOUT,
+    API_USER_AGENT,
     DEFAULT_WORD,
     DEFAULT_ITER_BUDGET,
     DEFAULT_RATE_LIMIT_DELAY,
@@ -50,7 +54,8 @@ class WikiGraphBase:
             word (str): Wikipedia page title to start crawling from.
                 Defaults to ``DEFAULT_WORD``.
         """
-        self.word = word
+        # Convert spaces to underscores for Wikipedia compatibility
+        self.word = word.replace(" ", "_")
 
     def set_iter_budget(self, iter_budget=DEFAULT_ITER_BUDGET):
         """Set the maximum number of crawl iterations.
@@ -62,23 +67,61 @@ class WikiGraphBase:
         self.iter_budget = iter_budget
 
     def _fetch_related(self, word):
-        """Fetch related pages for *word* from the Wikipedia REST API.
+        """Fetch links from the 'See also' section of *word* via Wikipedia Action API.
 
         Args:
             word (str): Wikipedia page title to look up.
 
         Returns:
-            list[str]: Titles of related pages, or an empty list on failure.
+            list[str]: Titles of links in 'See also' section, or empty list if none found.
         """
-        base_rel_url = f"{self.base_url}/{word}"
+        # Step 1: Find the 'See also' section index
+        params_sections = {
+            "action": "parse",
+            "page": word,
+            "prop": "sections",
+            "format": "json"
+        }
         try:
-            resp = requests.get(base_rel_url, timeout=API_TIMEOUT)
+            resp = requests.get(self.base_url, params=params_sections, timeout=API_TIMEOUT,
+                                headers={"User-Agent": API_USER_AGENT})
             resp.raise_for_status()
-            body = resp.json()
+            sections = resp.json().get('parse', {}).get('sections', [])
         except (requests.RequestException, ValueError) as e:
-            print(f"Failed to fetch '{word}': {e}")
+            logger.error(f"Failed to fetch sections for '{word}': {e}")
             return []
-        return [page['title'] for page in body.get('pages', [])]
+
+        section_index = None
+        for s in sections:
+            if s.get('line', '').lower() == "see also":
+                section_index = s.get('index')
+                break
+
+        if section_index is None:
+            logger.info(f"No 'See also' section found for '{word}'")
+            return []
+
+        # Step 2: Fetch links from that specific section
+        params_links = {
+            "action": "parse",
+            "page": word,
+            "section": section_index,
+            "prop": "links",
+            "format": "json"
+        }
+        try:
+            resp = requests.get(self.base_url, params=params_links, timeout=API_TIMEOUT,
+                                headers={"User-Agent": API_USER_AGENT})
+            resp.raise_for_status()
+            links = resp.json().get('parse', {}).get('links', [])
+        except (requests.RequestException, ValueError) as e:
+            logger.error(f"Failed to fetch links for '{word}' (section {section_index}): {e}")
+            return []
+
+        # Filter for main namespace links (ns=0) and extract titles
+        discovered_titles = [link['*'] for link in links if link.get('ns') == 0]
+        logger.debug(f"Discovered {len(discovered_titles)} links in 'See also' section of '{word}'")
+        return discovered_titles
 
     def wiki_rel(self, word, random_seed=0, limit=DEFAULT_LIMIT):
         """Crawl one hop from *word* and return the next page title.
@@ -126,17 +169,20 @@ class WikiGraphBase:
                     word = random.choice(unvisited)
                     continue
                 remaining_patience -= 1
+                logger.debug(f"Patience decreased: {remaining_patience} remaining")
                 if remaining_patience == 0:
-                    print("Patience exhausted — stopping early.")
+                    logger.warning("Patience exhausted — stopping early.")
                     break
                 continue
 
             next_word = self.wiki_rel(word, random_seed=random_seed, limit=limit)
+            if remaining_patience < patience:
+                logger.debug("Patience reset")
             remaining_patience = patience  # reset on successful crawl
             word = next_word
             time.sleep(DEFAULT_RATE_LIMIT_DELAY)
-            print(f"Iteration {iteration + 1} done")
+            logger.info(f"Iteration {iteration + 1} done")
 
     def display(self):
         """Pretty-print the adjacency map ``dict_set`` as formatted JSON."""
-        print(json.dumps(self.dict_set, indent=4))
+        logger.debug(json.dumps(self.dict_set, indent=4))
