@@ -4,8 +4,12 @@ Builds a NetworkX graph from the crawler's adjacency map and renders it
 either as a static PDF figure or as an animated live plot.
 """
 
+import logging
+
 import matplotlib.pyplot as plt
 import networkx as nx
+
+logger = logging.getLogger(__name__)
 
 from wiki_grapher.constants.constants import (
     DEFAULT_GRAPH_SIZE,
@@ -94,7 +98,7 @@ class Grapher:
         Draws the full graph using a spring layout, scales node sizes by
         degree, and writes the output to ``OUTPUT_FIGURE_PATH``.
         """
-        print(f"Graph mode : {self.gtype} | {self.size}")
+        logger.info(f"Graph mode : {self.gtype} | {self.size}")
 
         g, color_seq, d = self._build_graph()
 
@@ -118,7 +122,7 @@ class Grapher:
             delay (float): Seconds to pause between frame updates. Defaults
                 to ``DEFAULT_LIVE_GRAPH_DELAY``.
         """
-        print(f"Graph mode : {self.gtype} | {self.size}")
+        logger.info(f"Graph mode : {self.gtype} | {self.size}")
 
         with plt.ion():
             plt.figure(figsize=(self.size, self.size))

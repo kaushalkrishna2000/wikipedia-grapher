@@ -23,9 +23,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 from wiki_grapher.crawler.pathfinder import Pathfinder
 from wiki_grapher.crawler.wanderer import Wanderer
 from wiki_grapher.grapher.grapher import Grapher
+from wiki_grapher.logger import setup_logging
 
 if __name__ == '__main__':
-    print('Hi User')
+    setup_logging()
 
     # Uncomment the crawler you want to use:
     # - Pathfinder: follows a sequential / random-choice chain of related pages

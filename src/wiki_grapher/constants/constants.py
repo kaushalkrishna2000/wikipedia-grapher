@@ -11,6 +11,7 @@ Groups:
 # Wikipedia API
 WIKIPEDIA_BASE_URL = "https://en.wikipedia.org/api/rest_v1/page/related"
 API_TIMEOUT = 10  # seconds
+API_USER_AGENT = "wikipedia-grapher/1.0 (https://github.com/kaushalkrishna2000/wikipedia-Grapher)"
 
 # Crawler defaults
 DEFAULT_WORD = "Apple"

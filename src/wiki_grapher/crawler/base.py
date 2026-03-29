@@ -5,13 +5,17 @@ iteration loop used by all concrete crawler implementations.
 """
 
 import json
+import logging
 import random
 import time
 import requests
 
+logger = logging.getLogger(__name__)
+
 from wiki_grapher.constants.constants import (
     WIKIPEDIA_BASE_URL,
     API_TIMEOUT,
+    API_USER_AGENT,
     DEFAULT_WORD,
     DEFAULT_ITER_BUDGET,
     DEFAULT_RATE_LIMIT_DELAY,
@@ -72,11 +76,11 @@ class WikiGraphBase:
         """
         base_rel_url = f"{self.base_url}/{word}"
         try:
-            resp = requests.get(base_rel_url, timeout=API_TIMEOUT)
+            resp = requests.get(base_rel_url, timeout=API_TIMEOUT, headers={"User-Agent": API_USER_AGENT})
             resp.raise_for_status()
             body = resp.json()
         except (requests.RequestException, ValueError) as e:
-            print(f"Failed to fetch '{word}': {e}")
+            logger.error(f"Failed to fetch '{word}': {e}")
             return []
         return [page['title'] for page in body.get('pages', [])]
 
@@ -127,7 +131,7 @@ class WikiGraphBase:
                     continue
                 remaining_patience -= 1
                 if remaining_patience == 0:
-                    print("Patience exhausted — stopping early.")
+                    logger.warning("Patience exhausted — stopping early.")
                     break
                 continue
 
@@ -135,8 +139,8 @@ class WikiGraphBase:
             remaining_patience = patience  # reset on successful crawl
             word = next_word
             time.sleep(DEFAULT_RATE_LIMIT_DELAY)
-            print(f"Iteration {iteration + 1} done")
+            logger.info(f"Iteration {iteration + 1} done")
 
     def display(self):
         """Pretty-print the adjacency map ``dict_set`` as formatted JSON."""
-        print(json.dumps(self.dict_set, indent=4))
+        logger.debug(json.dumps(self.dict_set, indent=4))
