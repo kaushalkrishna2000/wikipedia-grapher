@@ -1,3 +1,20 @@
+"""main.py — Entry point for the Wiki-Grapher application.
+
+Demonstrates a typical usage of the library:
+
+1. Instantiate a crawler (``Pathfinder`` or ``Wanderer``).
+2. Configure the seed page and iteration budget.
+3. Run the crawl with ``wiki_iter``.
+4. Pass the resulting adjacency map to ``Grapher`` and render the graph.
+
+Example::
+
+    python main.py
+
+The output graph is saved to ``exploration_map.pdf`` in the working directory.
+Uncomment ``g.live_graph()`` to watch the graph grow in real time.
+"""
+
 import sys
 import os
 

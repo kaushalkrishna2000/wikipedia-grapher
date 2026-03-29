@@ -1,3 +1,13 @@
+"""constants.py — Project-wide configuration constants for Wiki-Grapher.
+
+Groups:
+    - Wikipedia API settings (base URL, timeout).
+    - Crawler defaults (word, budget, rate-limit, limits, patience).
+    - Grapher defaults (figure size, graph type, node-size multipliers, delays).
+    - Node color palette.
+    - Output file path.
+"""
+
 # Wikipedia API
 WIKIPEDIA_BASE_URL = "https://en.wikipedia.org/api/rest_v1/page/related"
 API_TIMEOUT = 10  # seconds

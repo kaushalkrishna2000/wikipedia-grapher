@@ -1,3 +1,10 @@
+# Wiki-Grapher dependencies
+
+# HTTP requests to the Wikipedia REST API
 requests
+
+# Graph construction and analysis
 networkx
+
+# Graph visualisation and plotting
 matplotlib

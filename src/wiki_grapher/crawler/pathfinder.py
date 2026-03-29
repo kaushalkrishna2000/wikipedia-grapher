@@ -1,3 +1,9 @@
+"""pathfinder.py — Sequential Wikipedia crawler.
+
+At each hop the Pathfinder selects a single page from the related-pages list
+(randomly or deterministically) and follows it, building a chain-like graph.
+"""
+
 import random
 
 from wiki_grapher.crawler.base import WikiGraphBase
@@ -5,10 +11,33 @@ from wiki_grapher.constants.constants import DEFAULT_LIMIT
 
 
 class Pathfinder(WikiGraphBase):
-    """Sequential crawler — at each hop selects a page from the related list,
-    either randomly (random_seed=0) or deterministically (last item)."""
+    """Sequential Wikipedia crawler.
+
+    At each hop ``wiki_rel`` fetches the related pages for the current title,
+    stores up to *limit* of them in ``dict_set``, then returns one as the next
+    hop — chosen randomly when ``random_seed=0``, or as the last item
+    otherwise.
+
+    Inherits all shared state and the iteration loop from ``WikiGraphBase``.
+    """
 
     def wiki_rel(self, word, random_seed=0, limit=DEFAULT_LIMIT):
+        """Crawl one hop from *word* using a sequential selection strategy.
+
+        Fetches related pages, stores the first *limit* titles in ``dict_set``
+        keyed by *word*, then picks the next hop.
+
+        Args:
+            word (str): Current Wikipedia page title.
+            random_seed (int): ``0`` to pick the next hop randomly from
+                *word_list*; any other value to pick the last item.
+            limit (int): Maximum number of related pages to store per node.
+                Defaults to ``DEFAULT_LIMIT``.
+
+        Returns:
+            str: Title of the next page to visit. Returns *word* unchanged
+                if no related pages are found.
+        """
         self.word_set.add(word)
 
         all_pages = self._fetch_related(word)
