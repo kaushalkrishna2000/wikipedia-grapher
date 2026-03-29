@@ -67,9 +67,10 @@ After crawling, `Grapher` builds a NetworkX graph from the collected data and re
 - **Node colours**
   - Green — seed topic (starting point)
   - Red — topics directly crawled as key nodes
+  - Yellow — the node currently being expanded (only in live/animated modes)
   - Blue — topics discovered as neighbours (not directly crawled)
 - **Node size** — proportional to the node's degree (number of connections)
-- **Output** — `exploration_map.pdf` by default (static), `exploration_map.html` (interactive), or a live animated window
+- **Output** — `exploration_map.pdf` by default (static), `exploration_map.html` (interactive fluid graph), or a live animated window
 
 ---
 
@@ -156,13 +157,16 @@ g = Grapher(
 )
 
 g.develop_graph()       # saves exploration_map.pdf
-# g.live_graph(delay=2) # animated live graph, delay in seconds between frames
+g.develop_html_graph() # saves interactive exploration_map.html
+# g.live_graph(delay=2) # animated live graph, updates same window
 # g.animated_graph(delay=2) # structured animation (Empty -> Seed -> Expansion)
-# g.develop_html_graph() # saves interactive exploration_map.html
 ```
 
 ---
 
 ## Output
 
-The graph is saved as `exploration_map.pdf` in the working directory. Node size reflects the number of connections — highly connected topics appear larger. Use `monochrome=True` for a cleaner black-and-white export.
+- **`exploration_map.pdf`**: A high-quality static vector graph.
+- **`exploration_map.html`**: A fluid, interactive graph rendered in your browser (physics-enabled, draggable nodes).
+- **Node Size**: Reflects the number of connections — highly connected topics appear larger.
+- **Monochrome Mode**: Use `monochrome=True` for a cleaner black-and-white export.
