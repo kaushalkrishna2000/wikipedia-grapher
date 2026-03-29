@@ -64,10 +64,10 @@ class Grapher:
         self.gtype = gtype
 
     def _build_graph(self):
-        """Build the NetworkX graph and compute per-node colours and degrees.
+        """Build the NetworkX graph and compute per-node colors and degrees.
 
-        The seed node (``self.word``) is coloured green, intermediate key
-        nodes red, and leaf nodes blue (all white in monochrome mode).
+        The seed node (``self.word``) is colored green, intermediate key
+         nodes are red, and leaf nodes are blue (all white in monochrome mode).
 
         Returns:
             tuple:

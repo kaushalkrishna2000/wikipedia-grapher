@@ -1,6 +1,8 @@
 # Wiki-Grapher
 
-Wiki-Grapher builds a knowledge graph by crawling Wikipedia's "related pages" API, starting from a seed topic and hopping through related articles. The result is visualised as a graph saved to a PDF (or rendered live as an animation).
+Wiki-Grapher builds a knowledge graph by crawling Wikipedia's "See also" sections, starting from a seed topic and hopping through related articles. The result is visualised as a graph saved to a PDF (or rendered live as an animation).
+
+> **Note:** Due to the sunset of Wikipedia's `/page/related` REST API, the crawler now uses the Action API to fetch links specifically from the **"See also"** section of each page. This results in a more curated, though potentially smaller, graph.
 
 ---
 
@@ -15,7 +17,7 @@ flowchart TD
     C -- Yes --> K([Stop])
     C -- No --> D{Word already\nvisited?}
 
-    D -- No --> E[Fetch related pages\nfrom Wikipedia API]
+    D -- No --> E[Fetch 'See also' links\nfrom Wikipedia Action API]
     E --> F[Record topic to neighbours\nin dict_set and word_set]
     F --> G[Reset patience\nSelect next word]
     G --> H[Sleep rate-limit delay]
@@ -42,8 +44,8 @@ flowchart TD
 ### The Crawl Loop
 
 Starting from a seed topic, the crawler repeatedly:
-1. Fetches related pages for the current topic via the Wikipedia REST API
-2. Records the relationships in a dictionary (`topic → [related topics]`)
+1. Fetches links from the "See also" section of the current topic via the Wikipedia Action API
+2. Records the relationships in a dictionary (`topic → ["See also" links]`)
 3. Selects the next topic to visit based on the crawler's strategy
 4. Sleeps briefly between requests to respect rate limits
 

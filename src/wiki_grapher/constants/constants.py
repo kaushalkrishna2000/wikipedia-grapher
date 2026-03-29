@@ -9,7 +9,7 @@ Groups:
 """
 
 # Wikipedia API
-WIKIPEDIA_BASE_URL = "https://en.wikipedia.org/api/rest_v1/page/related"
+WIKIPEDIA_BASE_URL = "https://en.wikipedia.org/w/api.php"
 API_TIMEOUT = 10  # seconds
 API_USER_AGENT = "wikipedia-grapher/1.0 (https://github.com/kaushalkrishna2000/wikipedia-grapher)"
 
@@ -35,4 +35,4 @@ COLOR_DEFAULT_NODE = "blue"
 COLOR_WHITE_NODE = "white"
 
 # Output
-OUTPUT_FIGURE_PATH = "exploration_map.pdf"
+OUTPUT_FIGURE_PATH = "../exploration_map.pdf"
