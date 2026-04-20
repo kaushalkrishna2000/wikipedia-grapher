@@ -2,3 +2,4 @@
 .idea/
 /.cursor/plans
 __pycache__
+.DS_Store
